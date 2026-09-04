@@ -7,7 +7,15 @@ cd "$(dirname "$0")"
 if [ ! -f _fonte-privada.html ]; then
   echo "Falta o _fonte-privada.html nesta pasta."; exit 1
 fi
-if [ ! -x node_modules/.bin/staticrypt ]; then
+if ! command -v node >/dev/null 2>&1; then
+  echo
+  echo "O Node nao esta instalado neste Mac, e o script precisa dele."
+  echo "Instala com:  brew install node"
+  echo "Ou baixa em:  https://nodejs.org"
+  echo "Depois roda este script de novo."
+  exit 1
+fi
+if [ ! -f node_modules/.bin/staticrypt ]; then
   echo "Instalando staticrypt..."; npm install --no-save --silent staticrypt
 fi
 
