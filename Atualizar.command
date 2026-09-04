@@ -49,9 +49,21 @@ STATICRYPT_PASSWORD="$P1" node_modules/.bin/staticrypt _fonte-privada.html \
   --template-title "London 2026, private" \
   --template-instructions "Documents and bookings." \
   --template-button "Open" >/dev/null 2>&1 || { echo "A criptografia falhou."; unset P1 P2; fim 1; }
-unset P1 P2
+SENHA="$P1"; unset P1 P2
 mv encrypted/_fonte-privada.html privado.html
 rm -rf encrypted
+
+echo "Conferindo se a senha realmente abre o arquivo..."
+rm -rf .verifica
+STATICRYPT_PASSWORD="$SENHA" node_modules/.bin/staticrypt privado.html --decrypt -d .verifica >/dev/null 2>&1
+if ! grep -q "The London Itinerary" .verifica/privado.html 2>/dev/null; then
+  rm -rf .verifica privado.html; unset SENHA
+  echo "  A senha nao abre o arquivo gerado. Nada foi publicado."
+  echo "  Isso costuma ser erro de digitacao. Tenta de novo, devagar."
+  fim 1
+fi
+rm -rf .verifica; unset SENHA
+echo "  Abriu, senha confirmada."
 
 echo "Conferindo se sobrou alguma coisa em texto claro..."
 FALHOU=0

@@ -3,6 +3,7 @@ _fonte-privada.html
 photos.json
 node_modules/
 encrypted/
+.verifica/
 _mapa/
 *.pdf
 .DS_Store
