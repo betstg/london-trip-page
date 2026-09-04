@@ -63,23 +63,40 @@ echo "  Tudo limpo, $(du -h privado.html | cut -f1)."
 echo
 
 echo "Salvando no git..."
+MSG="Copia privada criptografada"
 GITID=()
 if [ -z "$(git config user.email)" ] && [ -z "$(git config --global user.email)" ]; then
   GITID=(-c user.name="betstg" -c user.email="roberta@kolabs.tech")
 fi
-git add -A
-if git diff --cached --quiet; then
+
+# Se o ultimo commit ja for a copia privada, substitui ele em vez de empilhar
+# outra versao. Assim testar varias senhas nao deixa senhas velhas no historico.
+AMEND=0
+if [ "$(git log -1 --pretty=%s 2>/dev/null)" = "$MSG" ]; then AMEND=1; fi
+
+git add privado.html .staticrypt.json 2>/dev/null
+if [ $AMEND -eq 1 ]; then
+  git "${GITID[@]}" commit -q --amend -m "$MSG" || { echo "  Falhou o commit."; fim 1; }
+  echo "  Substitui a versao anterior."
+elif git diff --cached --quiet; then
   echo "  Nada mudou desde a ultima vez."
-elif git "${GITID[@]}" commit -q -m "Atualiza a copia privada criptografada"; then
-  echo "  Commit feito."
 else
-  echo "  O commit falhou. Abre o GitHub Desktop e faz por la."
-  fim 1
+  git "${GITID[@]}" commit -q -m "$MSG" || { echo "  Falhou o commit."; fim 1; }
+  echo "  Commit feito."
 fi
 
 echo "Publicando..."
-if git push origin main 2>/dev/null; then
+PUSHED=0
+if [ $AMEND -eq 1 ]; then
+  git push --force-with-lease origin main 2>/dev/null && PUSHED=1
+else
+  git push origin main 2>/dev/null && PUSHED=1
+fi
+
+if [ $PUSHED -eq 1 ]; then
   echo "  Push feito."
+  git reflog expire --expire=now --all 2>/dev/null
+  git gc --prune=now -q 2>/dev/null
   echo
   echo "================================================"
   echo "  Pronto."
@@ -87,6 +104,8 @@ if git push origin main 2>/dev/null; then
   echo "  https://betstg.github.io/london-trip-page/privado.html"
   echo
   echo "  Leva um ou dois minutos para o GitHub atualizar."
+  echo "  Existe uma versao so, com a senha que voce acabou"
+  echo "  de digitar. As anteriores nao ficam guardadas."
   echo "================================================"
 else
   echo "  O push automatico nao funcionou, faltou a credencial."
