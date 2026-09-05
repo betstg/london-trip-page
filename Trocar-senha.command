@@ -3,7 +3,7 @@
 cd "$(dirname "$0")" || exit 1
 clear
 echo "================================================"
-echo "  London 2026, atualizar a copia privada"
+echo "  London 2026, TROCAR A SENHA da copia privada"
 echo "================================================"
 echo
 
@@ -32,15 +32,27 @@ if [ ! -f node_modules/.bin/staticrypt ]; then
   echo
 fi
 
-echo "Escolhe a senha. Use uma frase, nao uma palavra. Minimo de 16 caracteres."
+echo "ATENCAO. Isto troca a senha da pagina privada."
+echo "Se voce so quer publicar uma alteracao do roteiro, fecha esta janela"
+echo "e usa o Publicar.command."
 echo
-echo "Nada vai aparecer na tela enquanto voce digita. Isso e normal."
+read -rp "Digita  trocar  para continuar: " OK
+[ "$OK" != "trocar" ] && { echo "Cancelado, nada foi alterado."; fim 0; }
 echo
-read -rsp "Senha: " P1; echo
-read -rsp "Digita de novo: " P2; echo
+echo "Escolhe a senha. Use uma frase, minimo de 16 caracteres."
+echo "A senha aparece na tela, para voce conferir antes de confirmar."
 echo
-if [ "$P1" != "$P2" ]; then echo "As senhas nao batem. Da duplo clique de novo."; fim 1; fi
+read -rp "Senha: " P1
 if [ ${#P1} -lt 16 ]; then echo "Curta demais, tem ${#P1} caracteres e precisa de 16."; fim 1; fi
+echo
+echo "  Voce digitou isto, com ${#P1} caracteres:"
+echo
+echo "    $P1"
+echo
+read -rp "Esta certo? Digita  sim  para criptografar: " OK2
+[ "$OK2" != "sim" ] && { echo "Cancelado, nada foi alterado."; unset P1; fim 0; }
+P2="$P1"
+echo
 
 echo "Criptografando, demora uns segundos..."
 rm -rf encrypted
